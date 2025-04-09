@@ -3,6 +3,7 @@
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 CloudFront link to the app deployed via AWS CDK: https://d1lxrooju0pl4f.cloudfront.net/
+CloudFront link to the app deployed manually: https://dgeqw2cqdqbds.cloudfront.net/
 
 ## Useful commands
 

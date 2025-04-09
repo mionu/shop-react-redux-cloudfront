@@ -34,7 +34,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <Typography
           variant="subtitle1"
           align="center"
-          color="red"
+          color="textSecondary"
           component="p"
         >
           Thank you for your purchase!
