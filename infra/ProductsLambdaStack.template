@@ -23,8 +23,8 @@ Resources:
       Code:
         S3Bucket:
           Fn::Sub: cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
-        S3Key: d4b3408e2864c03b2baec79c8383d61de2ffd27917bb3cfcfa53c8771c765ae1.zip
-      Handler: get-products-list.main
+        S3Key: de65f0cc4d944f18ad30238aa7a10dcd634a46483dc15521a2feab7678f04c61.zip
+      Handler: handler.getProductsList
       MemorySize: 1024
       Role:
         Fn::GetAtt:
@@ -36,7 +36,7 @@ Resources:
       - getProductsListServiceRoleC64A5CD3
     Metadata:
       aws:cdk:path: ProductsLambdaStack/getProductsList/Resource
-      aws:asset:path: asset.d4b3408e2864c03b2baec79c8383d61de2ffd27917bb3cfcfa53c8771c765ae1
+      aws:asset:path: asset.de65f0cc4d944f18ad30238aa7a10dcd634a46483dc15521a2feab7678f04c61
       aws:asset:is-bundled: false
       aws:asset:property: Code
   getProductsByIdServiceRoleD8824A03:
@@ -63,8 +63,8 @@ Resources:
       Code:
         S3Bucket:
           Fn::Sub: cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
-        S3Key: d4b3408e2864c03b2baec79c8383d61de2ffd27917bb3cfcfa53c8771c765ae1.zip
-      Handler: get-product-by-id.main
+        S3Key: de65f0cc4d944f18ad30238aa7a10dcd634a46483dc15521a2feab7678f04c61.zip
+      Handler: handler.getProductsById
       MemorySize: 1024
       Role:
         Fn::GetAtt:
@@ -76,7 +76,7 @@ Resources:
       - getProductsByIdServiceRoleD8824A03
     Metadata:
       aws:cdk:path: ProductsLambdaStack/getProductsById/Resource
-      aws:asset:path: asset.d4b3408e2864c03b2baec79c8383d61de2ffd27917bb3cfcfa53c8771c765ae1
+      aws:asset:path: asset.de65f0cc4d944f18ad30238aa7a10dcd634a46483dc15521a2feab7678f04c61
       aws:asset:is-bundled: false
       aws:asset:property: Code
   productsapi7D590FA8:
@@ -86,19 +86,16 @@ Resources:
       Name: Products API
     Metadata:
       aws:cdk:path: ProductsLambdaStack/products-api/Resource
-  productsapiDeployment21EB96E4b4e57df2e17aa7c15f4c86261dabaa44:
+  productsapiDeployment21EB96E4029f82a8ddea5bc9f34dcc774ebf2783:
     Type: AWS::ApiGateway::Deployment
     Properties:
       Description: This API serves the Lambda functions.
       RestApiId:
         Ref: productsapi7D590FA8
     DependsOn:
-      - productsapiOPTIONS74639306
       - productsapiproductsproductidGET752017E7
-      - productsapiproductsproductidOPTIONS23F37165
       - productsapiproductsproductid3AA710FE
       - productsapiproductsGETCACF88FF
-      - productsapiproductsOPTIONSC2962435
       - productsapiproductsD87799F9
     Metadata:
       aws:cdk:path: ProductsLambdaStack/products-api/Deployment/Resource
@@ -106,42 +103,12 @@ Resources:
     Type: AWS::ApiGateway::Stage
     Properties:
       DeploymentId:
-        Ref: productsapiDeployment21EB96E4b4e57df2e17aa7c15f4c86261dabaa44
+        Ref: productsapiDeployment21EB96E4029f82a8ddea5bc9f34dcc774ebf2783
       RestApiId:
         Ref: productsapi7D590FA8
       StageName: prod
     Metadata:
       aws:cdk:path: ProductsLambdaStack/products-api/DeploymentStage.prod/Resource
-  productsapiOPTIONS74639306:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      ApiKeyRequired: false
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-            StatusCode: "204"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-          StatusCode: "204"
-      ResourceId:
-        Fn::GetAtt:
-          - productsapi7D590FA8
-          - RootResourceId
-      RestApiId:
-        Ref: productsapi7D590FA8
-    Metadata:
-      aws:cdk:path: ProductsLambdaStack/products-api/Default/OPTIONS/Resource
   productsapiproductsD87799F9:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -154,34 +121,6 @@ Resources:
         Ref: productsapi7D590FA8
     Metadata:
       aws:cdk:path: ProductsLambdaStack/products-api/Default/products/Resource
-  productsapiproductsOPTIONSC2962435:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      ApiKeyRequired: false
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-            StatusCode: "204"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-          StatusCode: "204"
-      ResourceId:
-        Ref: productsapiproductsD87799F9
-      RestApiId:
-        Ref: productsapi7D590FA8
-    Metadata:
-      aws:cdk:path: ProductsLambdaStack/products-api/Default/products/OPTIONS/Resource
   productsapiproductsGETApiPermissionProductsLambdaStackproductsapiFE4FD426GETproductsAADE3137:
     Type: AWS::Lambda::Permission
     Properties:
@@ -237,9 +176,7 @@ Resources:
       HttpMethod: GET
       Integration:
         IntegrationHttpMethod: POST
-        IntegrationResponses:
-          - StatusCode: "200"
-        Type: AWS
+        Type: AWS_PROXY
         Uri:
           Fn::Join:
             - ""
@@ -252,12 +189,6 @@ Resources:
                   - getProductsList1F4CE4F4
                   - Arn
               - /invocations
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-          StatusCode: "200"
       ResourceId:
         Ref: productsapiproductsD87799F9
       RestApiId:
@@ -274,34 +205,6 @@ Resources:
         Ref: productsapi7D590FA8
     Metadata:
       aws:cdk:path: ProductsLambdaStack/products-api/Default/products/{product_id}/Resource
-  productsapiproductsproductidOPTIONS23F37165:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      ApiKeyRequired: false
-      AuthorizationType: NONE
-      HttpMethod: OPTIONS
-      Integration:
-        IntegrationResponses:
-          - ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'*'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
-            StatusCode: "204"
-        RequestTemplates:
-          application/json: "{ statusCode: 200 }"
-        Type: MOCK
-      MethodResponses:
-        - ResponseParameters:
-            method.response.header.Access-Control-Allow-Headers: true
-            method.response.header.Access-Control-Allow-Origin: true
-            method.response.header.Access-Control-Allow-Methods: true
-          StatusCode: "204"
-      ResourceId:
-        Ref: productsapiproductsproductid3AA710FE
-      RestApiId:
-        Ref: productsapi7D590FA8
-    Metadata:
-      aws:cdk:path: ProductsLambdaStack/products-api/Default/products/{product_id}/OPTIONS/Resource
   productsapiproductsproductidGETApiPermissionProductsLambdaStackproductsapiFE4FD426GETproductsproductid9D62A3D6:
     Type: AWS::Lambda::Permission
     Properties:
@@ -357,11 +260,7 @@ Resources:
       HttpMethod: GET
       Integration:
         IntegrationHttpMethod: POST
-        IntegrationResponses:
-          - StatusCode: "200"
-        RequestTemplates:
-          application/json: "{ \"product_id\": \"$input.params('product_id')\" }"
-        Type: AWS
+        Type: AWS_PROXY
         Uri:
           Fn::Join:
             - ""
@@ -374,9 +273,6 @@ Resources:
                   - getProductsById008BCA51
                   - Arn
               - /invocations
-      MethodResponses:
-        - StatusCode: "200"
-        - StatusCode: "404"
       ResourceId:
         Ref: productsapiproductsproductid3AA710FE
       RestApiId:
@@ -386,7 +282,7 @@ Resources:
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAA/+1W30scMRD+W8yjxK2eUMq9nZZSaa3H6dtxyLiZ2xvNJttM0mNd9n8vyf7wlLZUECnFp02++TL5ZiaZ7CQ7+vA+O9yDLR/k6u5A003WXHrI7yRs+brRUN4oyJpPweSerFk2wgXjqUQxFftCihJL6+pLuh+AaLPB97MNGKXR9bPcqo7Wyhfys5KnazOIi+M5upKYyZpWEpRZs7Aal40A5lCiOqnFtBGVI5NTBXqW5zaYYZOOExfMkr9eqijBQIFqbjXlhCymy+YRVs9cz13FwF5rqxR7dNFKPr4GZvSczeJH8nF2EvI79CfAuFxJqKgAj1uos2aB7GcVxUp2o28wVkEh546qUVFE1hC0P7WO5w7XmoqNv0gEjuGB1nZ74aigOO9Ci9A5+o1Vj6DPCApdB7W9+E6A/IiVtnWJxi+bX2iAivqRQw9kHug8niZQ6sp+tQXloM9UzFtfjH8JT0E/qJeXHgpMIQ/QzqlORrlAtsHlmAop9sVKdqntypdMwxXxvupsPUDGY+FgJ5F2p3DBb6yj+3indmdnw+oBSuuv6mq4uLEaX7Be4PdADpWYrkEz/o4fL3aUtECurOH+RLMHH/h0uMWxrp15Dg5K9OMxWbV9Ls8feXmuE/mWrNdL1v8Qw1vBX7bgcY+n0DPUjy31r6ipe3bMsX0uG1GBw/H9rcBv5uD8qO4P1uGpSo7a9sFn4saWnB7d2K/JFJF8EXwVfCuNVZjd8rsfk0l2NMkO926Z6KD/8ckW3fcndT95hIMJAAA=
+      Analytics: v2:deflate64:H4sIAAAAAAAA/71TTWsbMRD9LdExyGriQCm+rRsKhX4Yu7fFhIk0WU+8KwlJW7MV+9+LtF8JhV4aepL05mlm3htpLW4/vBc3V3DxK6nOq5oeRTwEkGcOF/8Qa2geFYj4qdUykNFlZK7VgRpkG3bNOGuwMa470K8JSDHThvF0Aq1qdONJGjXQev5GeY7845Oemkv7HbqGvCeje07QiLg3NZaRgfdtg2rbsU1k1pGWZKEupDStnooMnHShyPnGVlkDGipUO1OTJPRsU8ZXWFe4kXtMwv5Xqaw9pei5v3sA7zF4UaSF+zuxbeUZwxY8lkcOlioIeIFOxD36UFhKkxx232CegkIvHdmlo6HGwOP3aGvTNahDGf+gcgaWxp3DAKQXup+HDkr9MF9MRRLqzyrJGz17Czw3u1TlhwAV5lYn6IWoHOR79KZ1ErNP7JodZ6SMzILDeWIWwmkHLsxS/hKdXMuJ+FcMJ6MGvzMyvekQ7BAbAdIBKwcvLDXZ38W+f8yQ+xou9P2iNBOT9vx4kjGkq0T93gbbhp5ro1A8+3c/12txuxY3V8+eaDV+YLEf1t9YHZF9SwQAAA==
     Metadata:
       aws:cdk:path: ProductsLambdaStack/CDKMetadata/Default
     Condition: CDKMetadataAvailable

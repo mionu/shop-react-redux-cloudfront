@@ -1,4 +1,4 @@
-import { Product } from '../models/product';
+import { Product } from './product';
 
 const ProductsList: Product[] = [
     { id: '1', title: 'Wireless Headphones', description: 'High-quality over-ear headphones with noise cancellation.', price: 99.99, imageUrl: 'https://example.com/headphones.jpg', count: 50 },
@@ -13,7 +13,7 @@ const ProductsList: Product[] = [
     { id: '10', title: 'Electric Kettle', description: 'Fast-boiling kettle with temperature control.', price: 24.99, imageUrl: 'https://example.com/kettle.jpg', count: 110 },
 ];
 
-export const getProductsList = async (): Promise<Product[]> => {
+export const getProducts = async (): Promise<Product[]> => {
     return ProductsList;
 };
 
