@@ -13,6 +13,9 @@ export default defineConfig({
     },
   },
   plugins: [react()],
+  build: {
+    outDir: path.resolve(__dirname, "infra/resources/build"),
+  },
   test: {
     globals: true,
     environment: "jsdom",
