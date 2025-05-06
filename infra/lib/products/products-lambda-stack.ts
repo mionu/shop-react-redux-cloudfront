@@ -3,10 +3,11 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
 import { Construct } from 'constructs';
+import { DbTablesStack } from '../db-tables-stack';
 
 export class ProductsLambdaStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-        super(scope, id, props);
+    constructor(scope: Construct, id: string, tables: DbTablesStack) {
+        super(scope, id);
 
         const getProductsList = new lambda.Function(this, 'getProductsList', {
             runtime: lambda.Runtime.NODEJS_20_X,
@@ -14,6 +15,10 @@ export class ProductsLambdaStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(5),
             handler: 'handler.getProductsList',
             code: lambda.Code.fromAsset(path.join(__dirname, './')),
+            environment: {
+                PRODUCTS_TABLE: 'Products',
+                STOCKS_TABLE: 'Stocks',
+            },
         });
 
         const getProductsById = new lambda.Function(this, 'getProductsById', {
@@ -22,6 +27,10 @@ export class ProductsLambdaStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(5),
             handler: 'handler.getProductsById',
             code: lambda.Code.fromAsset(path.join(__dirname, './')),
+            environment: {
+                PRODUCTS_TABLE: 'Products',
+                STOCKS_TABLE: 'Stocks',
+            },
         });
 
         const api = new apigateway.RestApi(this, 'products-api', {
@@ -37,5 +46,10 @@ export class ProductsLambdaStack extends cdk.Stack {
 
         const productByIdResource = productsResource.addResource('{product_id}')
         productByIdResource.addMethod('GET', getProductsByIdIntegration);
+
+        tables.grantReadData('Products', getProductsList);
+        tables.grantReadData('Stocks', getProductsList);
+        tables.grantReadData('Products', getProductsById);
+        tables.grantReadData('Stocks', getProductsById);
     }
 }
