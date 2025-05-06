@@ -60,3 +60,30 @@ export async function getProductsById(event: any) {
         }
     }
 }
+
+export async function createProduct(event: any) {
+    try {
+        const product = JSON.parse(event.body);
+        const createdProduct = await productsService.createProduct(product);
+
+        return {
+            body: JSON.stringify(createdProduct),
+            statusCode: 201,
+            headers: {
+                'Access-Control-Allow-Headers': 'Content-type',
+                'Access-Control-Allow-Methods': 'POST',
+                'Access-Control-Allow-Origin': '*',
+            },
+        };
+    } catch (error: any) {
+        return {
+            body: JSON.stringify({ error: error?.toString() }),
+            statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Headers': 'Content-type',
+                'Access-Control-Allow-Methods': 'POST',
+                'Access-Control-Allow-Origin': '*',
+            },
+        }
+    }
+}

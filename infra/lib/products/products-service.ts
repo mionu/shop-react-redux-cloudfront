@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { Product } from './product';
 
 export class ProductsService {
@@ -57,5 +57,22 @@ export class ProductsService {
         } catch (error) {
             return null;
         }
+    }
+
+    async createProduct(product: Product): Promise<Product> {
+        if (!product.title) {
+            throw new Error('Product title is required');
+        }
+        const newProduct = {
+            ...product,
+            id: crypto.randomUUID(),
+        };
+        const command = new PutCommand({
+            TableName: this.tables.PRODUCTS_TABLE,
+            Item: newProduct,
+        });
+
+        await this.client.send(command);
+        return newProduct;
     }
 }

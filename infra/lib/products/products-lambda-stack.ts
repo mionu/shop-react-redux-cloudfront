@@ -21,6 +21,17 @@ export class ProductsLambdaStack extends cdk.Stack {
             },
         });
 
+        const createProduct = new lambda.Function(this, 'createProduct', {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            memorySize: 1024,
+            timeout: cdk.Duration.seconds(5),
+            handler: 'handler.createProduct',
+            code: lambda.Code.fromAsset(path.join(__dirname, './')),
+            environment: {
+                PRODUCTS_TABLE: 'Products',
+            },
+        });
+
         const getProductsById = new lambda.Function(this, 'getProductsById', {
             runtime: lambda.Runtime.NODEJS_20_X,
             memorySize: 1024,
@@ -39,10 +50,12 @@ export class ProductsLambdaStack extends cdk.Stack {
         });
 
         const productListIntegration = new apigateway.LambdaIntegration(getProductsList, {});
+        const createProductIntegration = new apigateway.LambdaIntegration(createProduct, {});
         const getProductsByIdIntegration = new apigateway.LambdaIntegration(getProductsById, {});
 
         const productsResource = api.root.addResource('products');
         productsResource.addMethod('GET', productListIntegration);
+        productsResource.addMethod('POST', createProductIntegration);
 
         const productByIdResource = productsResource.addResource('{product_id}')
         productByIdResource.addMethod('GET', getProductsByIdIntegration);
@@ -51,5 +64,6 @@ export class ProductsLambdaStack extends cdk.Stack {
         tables.grantReadData('Stocks', getProductsList);
         tables.grantReadData('Products', getProductsById);
         tables.grantReadData('Stocks', getProductsById);
+        tables.grantWriteData('Products', createProduct);
     }
 }
