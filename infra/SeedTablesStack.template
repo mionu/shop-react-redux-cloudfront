@@ -1,0 +1,180 @@
+Resources:
+  seedTablesServiceRole5C6B1547:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: SeedTablesStack/seedTables/ServiceRole/Resource
+  seedTablesServiceRoleDefaultPolicy3BA1ADF7:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - dynamodb:BatchWriteItem
+              - dynamodb:DeleteItem
+              - dynamodb:DescribeTable
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Effect: Allow
+            Resource:
+              - Fn::ImportValue: DbTablesStack:ExportsOutputFnGetAttProducts229621C6Arn99C6A79A
+              - Fn::ImportValue: DbTablesStack:ExportsOutputFnGetAttStocks8F3F0432Arn94EAFEBF
+              - Ref: AWS::NoValue
+        Version: "2012-10-17"
+      PolicyName: seedTablesServiceRoleDefaultPolicy3BA1ADF7
+      Roles:
+        - Ref: seedTablesServiceRole5C6B1547
+    Metadata:
+      aws:cdk:path: SeedTablesStack/seedTables/ServiceRole/DefaultPolicy/Resource
+  seedTables5623B72B:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Sub: cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
+        S3Key: bb087a2ec990d383d3a169e2f3e8c63a7a54b5d1dda6b1382129f02f8bf68877.zip
+      Environment:
+        Variables:
+          PRODUCTS_TABLE: Products
+          STOCKS_TABLE: Stocks
+      Handler: handler.main
+      MemorySize: 1024
+      Role:
+        Fn::GetAtt:
+          - seedTablesServiceRole5C6B1547
+          - Arn
+      Runtime: nodejs20.x
+      Timeout: 5
+    DependsOn:
+      - seedTablesServiceRoleDefaultPolicy3BA1ADF7
+      - seedTablesServiceRole5C6B1547
+    Metadata:
+      aws:cdk:path: SeedTablesStack/seedTables/Resource
+      aws:asset:path: asset.bb087a2ec990d383d3a169e2f3e8c63a7a54b5d1dda6b1382129f02f8bf68877
+      aws:asset:is-bundled: false
+      aws:asset:property: Code
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/31STWsCMRD9LeYoMdUVSvG2lhZ6E9fbIjImU41uJrLJKjbsfy/Zj2Kx9RTmvTfz3gxJxOTlWYwHcHEjqY6jQm9FyDzII4eL24QCzFaBCO8VSa8t5YGVFXltkM3YkHFm0NjymumvHoicrXxX7YFUgWVXSat6GdJZl5YMUiuteWCg1NstnDfKIVs/Jtf89ZP6gDXXYERY2gLzwMC5yqCaX9kssFOpSeoTFKmUtqI+YquJDWkzoYvDDBDsUC1soaVGx2Z5+IVd07LT9vlWdtFbtIrY07Heg9x/UKEJf7if1R6S/89tFo/BeQs3J+nHrWxk7lzuYaUyDx7jVd1N4D/gxq+1qrmbbsA59E6k8eFuKuaVPKKfg8N8XfMlOluVEhsn3ogyDztNu5qTVSgO7umcJGKSiPHg4LQedT9LLNv3GwKelhacAgAA
+    Metadata:
+      aws:cdk:path: SeedTablesStack/CDKMetadata/Default
+    Condition: CDKMetadataAvailable
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-3
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-4
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-2
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - il-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+      - Fn::Equals:
+          - Ref: AWS::Region
+          - us-west-2
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+
