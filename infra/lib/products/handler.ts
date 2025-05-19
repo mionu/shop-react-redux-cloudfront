@@ -1,3 +1,5 @@
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import {
     ProductsService,
 } from './products-service';
@@ -86,4 +88,40 @@ export async function createProduct(event: any) {
             },
         }
     }
+}
+
+export async function importProductsFile(event: any) {
+    const bucketName = process.env.BUCKET!;
+    const fileName = event.queryStringParameters?.name;
+
+    if (!fileName) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                message: 'File name is required',
+            }),
+        }
+    }
+
+    const s3 = new S3Client({ region: process.env.AWS_REGION });
+    const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: `uploaded/${fileName}`,
+        ContentType: 'text/csv',
+    });
+    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+
+    return {
+        statusCode: 200,
+        body: JSON.stringify({
+            url: signedUrl,
+        }),
+    };
+}
+
+export async function parseProductsFile(event: any) {
+    return {
+        statusCode: 200,
+        body: `parseProductsFile ${process.env.BUCKET}`,
+    };
 }
