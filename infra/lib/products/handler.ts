@@ -1,8 +1,17 @@
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+    S3Client,
+    PutObjectCommand,
+    GetObjectCommand,
+    CopyObjectCommand,
+    DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import {
     ProductsService,
 } from './products-service';
+import { S3Event } from 'aws-lambda';
+import { Readable } from 'node:stream';
+import * as csvParser from 'csv-parser';
 
 const productsService = new ProductsService({
     PRODUCTS_TABLE: process.env.PRODUCTS_TABLE!,
@@ -100,6 +109,11 @@ export async function importProductsFile(event: any) {
             body: JSON.stringify({
                 message: 'File name is required',
             }),
+            headers: {
+                'Access-Control-Allow-Headers': 'Content-type',
+                'Access-Control-Allow-Methods': 'GET',
+                'Access-Control-Allow-Origin': '*',
+            },
         }
     }
 
@@ -116,12 +130,63 @@ export async function importProductsFile(event: any) {
         body: JSON.stringify({
             url: signedUrl,
         }),
+        headers: {
+            'Access-Control-Allow-Headers': 'Content-type',
+            'Access-Control-Allow-Methods': 'GET',
+            'Access-Control-Allow-Origin': '*',
+        },
     };
 }
 
-export async function parseProductsFile(event: any) {
-    return {
-        statusCode: 200,
-        body: `parseProductsFile ${process.env.BUCKET}`,
-    };
+export async function parseProductsFile(event: S3Event) {
+    const s3Client = new S3Client([{
+        region: process.env.AWS_REGION,
+    }]);
+
+    for (const file of event.Records) {
+        const bucket = file.s3.bucket.name;
+        const key = decodeURIComponent(file.s3.object.key.replace(/\+/g, ' '));
+
+        console.log('Processing file: ', bucket, key);
+
+        try {
+            const getCommand = new GetObjectCommand({
+                Bucket: bucket,
+                Key: key,
+            });
+            const { Body } = await s3Client.send(getCommand);
+            await new Promise<void>((resolve, reject) => {
+                (Body as Readable)
+                    .pipe(csvParser())
+                    .on('data', (row) => console.log('Row: ', row))
+                    .on('end', () => {
+                        console.log('CSV file successfully processed')
+                        resolve();
+                    })
+                    .on('error', (error) => {
+                        console.error('Error: ', error);
+                        reject(error);
+                    });
+            });
+
+            console.log('Copying file to parsed folder');
+            const fileName = key.split('/').pop();
+            const copyCommand = new CopyObjectCommand({
+                Bucket: bucket,
+                CopySource: `${bucket}/${key}`,
+                Key: `parsed/${fileName}`,
+            });
+            await s3Client.send(copyCommand);
+            console.log(`${fileName} copied to parsed folder`);
+
+            const deleteCommand = new DeleteObjectCommand({
+                Bucket: bucket,
+                Key: key,
+            });
+            await s3Client.send(deleteCommand);
+            console.log(`${fileName} deleted from uploaded folder`);
+        } catch (error) {
+            console.error('Error: ', error);
+        }
+    }
 }

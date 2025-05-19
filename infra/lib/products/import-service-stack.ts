@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import { aws_s3, RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as path from 'path';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 
@@ -15,6 +14,14 @@ export class ImportServiceStack extends cdk.Stack {
             autoDeleteObjects: true,
             blockPublicAccess: aws_s3.BlockPublicAccess.BLOCK_ACLS,
             publicReadAccess: true,
+            cors: [
+                {
+                    allowedMethods: [aws_s3.HttpMethods.GET, aws_s3.HttpMethods.PUT],
+                    allowedOrigins: ['*'],
+                    allowedHeaders: ['*'],
+                    maxAge: 3000,
+                },
+            ],
         });
 
         const importProductsFile = new lambda.Function(this, 'importProductsFile', {
@@ -22,7 +29,7 @@ export class ImportServiceStack extends cdk.Stack {
             memorySize: 1024,
             timeout: cdk.Duration.seconds(5),
             handler: 'handler.importProductsFile',
-            code: lambda.Code.fromAsset(path.join(__dirname, './')),
+            code: lambda.Code.fromAsset('dist/products'),
             environment: {
                 BUCKET: uploadBucket.bucketName,
             },
@@ -32,13 +39,15 @@ export class ImportServiceStack extends cdk.Stack {
             memorySize: 1024,
             timeout: cdk.Duration.seconds(5),
             handler: 'handler.parseProductsFile',
-            code: lambda.Code.fromAsset(path.join(__dirname, './')),
+            code: lambda.Code.fromAsset('dist/products'),
             environment: {
                 BUCKET: uploadBucket.bucketName,
             },
         });
 
         uploadBucket.grantPut(importProductsFile);
+        uploadBucket.grantPut(importFileParser);
+        uploadBucket.grantDelete(importFileParser);
         uploadBucket.addEventNotification(
             aws_s3.EventType.OBJECT_CREATED,
             new LambdaDestination(importFileParser),
