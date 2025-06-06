@@ -1,7 +1,6 @@
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as cdk from 'aws-cdk-lib';
-import * as path from 'path';
 import { Construct } from 'constructs';
 import { DbTablesStack } from '../db-tables-stack';
 
@@ -14,7 +13,7 @@ export class ProductsLambdaStack extends cdk.Stack {
             memorySize: 1024,
             timeout: cdk.Duration.seconds(5),
             handler: 'handler.getProductsList',
-            code: lambda.Code.fromAsset(path.join(__dirname, './')),
+            code: lambda.Code.fromAsset('dist/products'),
             environment: {
                 PRODUCTS_TABLE: 'Products',
                 STOCKS_TABLE: 'Stocks',
@@ -26,7 +25,7 @@ export class ProductsLambdaStack extends cdk.Stack {
             memorySize: 1024,
             timeout: cdk.Duration.seconds(5),
             handler: 'handler.createProduct',
-            code: lambda.Code.fromAsset(path.join(__dirname, './')),
+            code: lambda.Code.fromAsset('dist/products'),
             environment: {
                 PRODUCTS_TABLE: 'Products',
             },
@@ -37,7 +36,7 @@ export class ProductsLambdaStack extends cdk.Stack {
             memorySize: 1024,
             timeout: cdk.Duration.seconds(5),
             handler: 'handler.getProductsById',
-            code: lambda.Code.fromAsset(path.join(__dirname, './')),
+            code: lambda.Code.fromAsset('dist/products'),
             environment: {
                 PRODUCTS_TABLE: 'Products',
                 STOCKS_TABLE: 'Stocks',
