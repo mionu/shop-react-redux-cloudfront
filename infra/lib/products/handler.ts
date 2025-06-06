@@ -6,10 +6,12 @@ import {
     CopyObjectCommand,
     DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { SQSClient, SendMessageBatchCommand } from '@aws-sdk/client-sqs';
 import {
     ProductsService,
 } from './products-service';
-import { S3Event } from 'aws-lambda';
+import { S3Event, SQSEvent } from 'aws-lambda';
 import { Readable } from 'node:stream';
 import * as csvParser from 'csv-parser';
 
@@ -142,6 +144,9 @@ export async function parseProductsFile(event: S3Event) {
     const s3Client = new S3Client([{
         region: process.env.AWS_REGION,
     }]);
+    const sqsClient = new SQSClient([{
+        region: process.env.AWS_REGION,
+    }]);
 
     for (const file of event.Records) {
         const bucket = file.s3.bucket.name;
@@ -155,19 +160,32 @@ export async function parseProductsFile(event: S3Event) {
                 Key: key,
             });
             const { Body } = await s3Client.send(getCommand);
-            await new Promise<void>((resolve, reject) => {
+            const parsedProducts = await new Promise<any[]>((resolve, reject) => {
+                const products: any[] = [];
                 (Body as Readable)
                     .pipe(csvParser())
-                    .on('data', (row) => console.log('Row: ', row))
-                    .on('end', () => {
+                    .on('data', (row) => {
+                        console.log('Row: ', row);
+                        products.push(row);
+                    })
+                    .on('end', async () => {
                         console.log('CSV file successfully processed')
-                        resolve();
+                        resolve(products);
                     })
                     .on('error', (error) => {
                         console.error('Error: ', error);
                         reject(error);
                     });
             });
+            const sqsEntries = new SendMessageBatchCommand({
+                Entries: parsedProducts.map((product, index) => ({
+                    Id: index + '',
+                    MessageBody: JSON.stringify(product),
+                })),
+                QueueUrl: process.env.SQS_QUEUE_URL,
+            });
+            await sqsClient.send(sqsEntries);
+            console.log('Products sent to SQS queue');
 
             console.log('Copying file to parsed folder');
             const fileName = key.split('/').pop();
@@ -188,5 +206,35 @@ export async function parseProductsFile(event: S3Event) {
         } catch (error) {
             console.error('Error: ', error);
         }
+    }
+}
+
+export async function catalogBatchProcess(event: SQSEvent) {
+    try {
+        const snsClient = new SNSClient([{
+            region: process.env.AWS_REGION!,
+        }]);
+        const titles = [];
+
+        for (const record of event.Records) {
+            try {
+                const product = JSON.parse(record.body);
+                console.log('Processing product: ', product);
+
+                const newProduct = await productsService.createProduct(product);
+                console.log('Product created: ', newProduct);
+                titles.push(newProduct.title);
+            } catch (error) {
+                console.error('Error: ', error);
+            }
+        }
+
+        const publishCommand = new PublishCommand({
+            TopicArn: process.env.SNS_TOPIC_ARN!,
+            Message: `Products with the following titles have been successfully processed: ${titles.join(', ')}`,
+        });
+        await snsClient.send(publishCommand);
+    } catch (error) {
+        console.error('Error in catalogBatchProcess: ', error);
     }
 }

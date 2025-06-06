@@ -13,4 +13,4 @@ new DeployWebAppStack(app, 'DeployReactAppStack', {});
 const tables = new DbTablesStack(app, 'DbTablesStack');
 new SeedTablesStack(app, 'SeedTablesStack', tables);
 new ProductsLambdaStack(app, 'ProductsLambdaStack', tables);
-new ImportServiceStack(app, 'ImportServiceStack');
+new ImportServiceStack(app, 'ImportServiceStack', tables);
