@@ -1,4 +1,55 @@
 Resources:
+  BasicAuthorizerLambdaImportServiceStackImportBasicAuthorizerBDFED305Permissions4EC7F837:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::ImportValue: AuthServiceStack:ExportsOutputFnGetAttbasicAuthorizerF74DD00AArnF4D47D0D
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: importapi429AF455
+            - /authorizers/
+            - Ref: ImportBasicAuthorizer79802CE7
+    Metadata:
+      aws:cdk:path: ImportServiceStack/BasicAuthorizerLambda/ImportServiceStackImportBasicAuthorizerBDFED305:Permissions
+  ImportBasicAuthorizer79802CE7:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      AuthorizerResultTtlInSeconds: 300
+      AuthorizerUri:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Fn::Select:
+                - 1
+                - Fn::Split:
+                    - ":"
+                    - Fn::ImportValue: AuthServiceStack:ExportsOutputFnGetAttbasicAuthorizerF74DD00AArnF4D47D0D
+            - ":apigateway:"
+            - Fn::Select:
+                - 3
+                - Fn::Split:
+                    - ":"
+                    - Fn::ImportValue: AuthServiceStack:ExportsOutputFnGetAttbasicAuthorizerF74DD00AArnF4D47D0D
+            - :lambda:path/2015-03-31/functions/
+            - Fn::ImportValue: AuthServiceStack:ExportsOutputFnGetAttbasicAuthorizerF74DD00AArnF4D47D0D
+            - /invocations
+      IdentitySource: method.request.header.Authorization
+      Name: ImportServiceStackImportBasicAuthorizerBDFED305
+      RestApiId:
+        Ref: importapi429AF455
+      Type: TOKEN
+    Metadata:
+      aws:cdk:path: ImportServiceStack/ImportBasicAuthorizer/Resource
   ProductsImportBucket5A10ABB0:
     Type: AWS::S3::Bucket
     Properties:
@@ -216,7 +267,7 @@ Resources:
       Code:
         S3Bucket:
           Fn::Sub: cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
-        S3Key: 378a97f379bd7a1f01658f1fbc2d5cc0bcd7302edfacc4c02244ed74998b603c.zip
+        S3Key: 50fe41aff457edfc205197afe908ca2294e9a5573fdd55232dd478d46b545b99.zip
       Environment:
         Variables:
           BUCKET:
@@ -234,7 +285,7 @@ Resources:
       - importProductsFileServiceRole05E98DF6
     Metadata:
       aws:cdk:path: ImportServiceStack/importProductsFile/Resource
-      aws:asset:path: asset.378a97f379bd7a1f01658f1fbc2d5cc0bcd7302edfacc4c02244ed74998b603c
+      aws:asset:path: asset.50fe41aff457edfc205197afe908ca2294e9a5573fdd55232dd478d46b545b99
       aws:asset:is-bundled: false
       aws:asset:property: Code
   createProductTopic05C0E62B:
@@ -316,7 +367,7 @@ Resources:
       Code:
         S3Bucket:
           Fn::Sub: cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
-        S3Key: 378a97f379bd7a1f01658f1fbc2d5cc0bcd7302edfacc4c02244ed74998b603c.zip
+        S3Key: 50fe41aff457edfc205197afe908ca2294e9a5573fdd55232dd478d46b545b99.zip
       Environment:
         Variables:
           BUCKET:
@@ -336,7 +387,7 @@ Resources:
       - parseProductsFileServiceRole6D9308D1
     Metadata:
       aws:cdk:path: ImportServiceStack/parseProductsFile/Resource
-      aws:asset:path: asset.378a97f379bd7a1f01658f1fbc2d5cc0bcd7302edfacc4c02244ed74998b603c
+      aws:asset:path: asset.50fe41aff457edfc205197afe908ca2294e9a5573fdd55232dd478d46b545b99
       aws:asset:is-bundled: false
       aws:asset:property: Code
   BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC:
@@ -506,7 +557,7 @@ Resources:
       Name: Import API
     Metadata:
       aws:cdk:path: ImportServiceStack/import-api/Resource
-  importapiDeployment77CD807F486ae1686c2fac400362f0ded4150c48:
+  importapiDeployment77CD807F0048fbbd0b424e8149cfdf68e4a08714:
     Type: AWS::ApiGateway::Deployment
     Properties:
       Description: This API is used to upload entities to the S3 bucket.
@@ -514,15 +565,17 @@ Resources:
         Ref: importapi429AF455
     DependsOn:
       - importapiimportproductsGET3423BD34
+      - importapiimportproductsOPTIONSC37829D0
       - importapiimportproductsF60FE2E6
       - importapiimport824D70FB
+      - ImportBasicAuthorizer79802CE7
     Metadata:
       aws:cdk:path: ImportServiceStack/import-api/Deployment/Resource
   importapiDeploymentStageprod65C3BA04:
     Type: AWS::ApiGateway::Stage
     Properties:
       DeploymentId:
-        Ref: importapiDeployment77CD807F486ae1686c2fac400362f0ded4150c48
+        Ref: importapiDeployment77CD807F0048fbbd0b424e8149cfdf68e4a08714
       RestApiId:
         Ref: importapi429AF455
       StageName: prod
@@ -550,6 +603,34 @@ Resources:
         Ref: importapi429AF455
     Metadata:
       aws:cdk:path: ImportServiceStack/import-api/Default/import/products/Resource
+  importapiimportproductsOPTIONSC37829D0:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+      ResourceId:
+        Ref: importapiimportproductsF60FE2E6
+      RestApiId:
+        Ref: importapi429AF455
+    Metadata:
+      aws:cdk:path: ImportServiceStack/import-api/Default/import/products/OPTIONS/Resource
   importapiimportproductsGETApiPermissionImportServiceStackimportapiE0C77F60GETimportproducts593A91BB:
     Type: AWS::Lambda::Permission
     Properties:
@@ -601,7 +682,9 @@ Resources:
   importapiimportproductsGET3423BD34:
     Type: AWS::ApiGateway::Method
     Properties:
-      AuthorizationType: NONE
+      AuthorizationType: CUSTOM
+      AuthorizerId:
+        Ref: ImportBasicAuthorizer79802CE7
       HttpMethod: GET
       Integration:
         IntegrationHttpMethod: POST
@@ -618,6 +701,22 @@ Resources:
                   - importProductsFile45EA58E8
                   - Arn
               - /invocations
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
+          StatusCode: "200"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
+          StatusCode: "404"
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Headers: true
+          StatusCode: "500"
       ResourceId:
         Ref: importapiimportproductsF60FE2E6
       RestApiId:
@@ -684,11 +783,10 @@ Resources:
       Code:
         S3Bucket:
           Fn::Sub: cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
-        S3Key: 378a97f379bd7a1f01658f1fbc2d5cc0bcd7302edfacc4c02244ed74998b603c.zip
+        S3Key: 50fe41aff457edfc205197afe908ca2294e9a5573fdd55232dd478d46b545b99.zip
       Environment:
         Variables:
           PRODUCTS_TABLE: Products
-          STOCKS_TABLE: Stocks
           SNS_TOPIC_ARN:
             Ref: createProductTopic05C0E62B
       Handler: handler.catalogBatchProcess
@@ -704,7 +802,7 @@ Resources:
       - catalogBatchProcessServiceRole274D33CD
     Metadata:
       aws:cdk:path: ImportServiceStack/catalogBatchProcess/Resource
-      aws:asset:path: asset.378a97f379bd7a1f01658f1fbc2d5cc0bcd7302edfacc4c02244ed74998b603c
+      aws:asset:path: asset.50fe41aff457edfc205197afe908ca2294e9a5573fdd55232dd478d46b545b99
       aws:asset:is-bundled: false
       aws:asset:property: Code
   catalogBatchProcessSqsEventSourceImportServiceStackcatalogItemsQueue1FBFF45EC751EEE1:
@@ -722,7 +820,7 @@ Resources:
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAA/+1WbW8bNwz+LdXHQLm1KTAM/ma76RagWTzbQz8YRkFLzFmJTrpJlF3vcP99kO50vjVY0A57QYd9MM58SJF8SL3wqnj13bfFyxdw9JdCPl5qtSuaFYF45HD0Hxr/umhmQTwibRrmsLIH0AurlTixCZPoydkT4wwC2TeokfBu94CCPJuQC8jZTlvxuAg7rcRUCPSeTdgF46xO0BJBZrizF9Z5Ntk0DLS2R5S3SHsrI8S+v14zzhY/r9mWZ/WdU6Uy2WkP/oAg0WWwgo/TEpPQblveMJBybp1fBo1/XySekAu2bbd8fm+6EvLu09Vv07BdEvvUzmadvjeegcfNtuUaqp2EopnfmwW6SnmvrOFvgxGkrInNCYZUhTkXrKw7rdSvGYg6G6iX9mCkRtdLwspshuagnDUVmj6vrmDXY3gzcOP/WtivLqc/VqbO50by6wMaWtngBN5CXStTbhpG4ErMCe+AxH5Ep4KPswgpU75XRtrjGZ9bI4JzaNJxjaDD2jpK9jeE1VtQOjj0A2XYaZRZOqcydaYH75Wm85bvpGsj3KmO6Q8lJ6eEn1tzr8rR/n5KruUKqqJZWo3xKHofKpSzE5s0rHbKCFWDngphg8n0O5u4YCqGkG2ka6BEmQ6Pwu4SGWOnzGG4BdZ2kUPkK23T9FoiEPsbo5XBQTe08lnlf4DC836f1/5p+r3v2zHf/5v4zzcxHdRIi/fvVGSbg61t1DzJ4Sks5YqAMN51Pof9yxx9GfyV55/60bWi5f71B/AeyRfT+OHe+KJZ21qJFDGaJomvws4Lp+p+OKAIDpe8rK0a9nHtLFlhNZswrEDp4VYfxryLT6D3iva36D2UOLMyW0gE+Q6J0P0UMODo1h/n0nL/iy+aZDKknKSWQ61KIDzCqWiW6GlaqzR0pn8/wvCgSxzcjaL0K/gbrLU9xQpumiemnEGthqeQQJmzuR+/8mv7zpZKgL6Rn5yaz8VTUmfvfEVQYkopQ+MSRSVfok9vY5r5UnEysmlYDQ7PTQPaL8CdB5NntLk6yRHvxtyurgnJYxBR3el6QBnC0sGodDbV0Y+8dgvals+DJ1sN2ebGDlF/r184e1ASXeTJ00aO/JUp+dgDH/2St7tAdaCWGyuxePDfHK6uildXxcsXD16py37oK5bd9zf5reE02QwAAA==
+      Analytics: v2:deflate64:H4sIAAAAAAAA/+1X32/bNhD+W8rHgNHaDBiGvNluugVrFs/20AfDKM7kRWZMkSp/2FUF/e8FKVGSGyxAt2Rbhz0YMr87Hu++I4/Hi+zVjz9kL1/A0Z4zvj+XYpvVSwdsT+Fo39cSii2HrH7jFXNCqylYXG/o7E7N0RTCWqEVTcJ1TYxXThRILskZoaTAQptqKT4lIMi0d91oB4pLNN2IaZ7UUB2E0apA1ao2tCbA+dUYXkfNM7IJwn9o2W/Lp5i2lCt6dUDlltobhjdQlkLl65o4MDkmn7bg2G7kcQEfpwESKn8nFNfHAZ9pxbwxqFjVgQZLbVzUv3ZYvAEhvUHbRwVbiTyNBlcmRnXgnZAOjT0ZXSlmqjK437PqjGB2ptWdyFt+YpQPg2solCIHh0eosnql96gm3u20EZ/QBI7ivAGiC7RuUoqwp9t/v0KfTI6WGTE40i7azaCvsZS6Cuyv6weqlEApeo4cCDWo23GGV/qtzgUDec3J5bpuNs+OxyAGb+jSQY4xhASNgo3CQFIkOZaFSGJC1jUpwaQ5lJTgdnMwwyZ+RJrYjIboDbqd5m0eIpKOjHNlK+sAoRzmBkZU68i7JZc1gT6zp6PrNDtBcf6qKrHzNOTrF6wW+MELE7bsHUiLf6Qft+RO8wXaUisbNvy6JtaB83Y2nGrTiedgoMB+nzebpsvOzYmVrzVCn4isL2Mbk/jXg6XPpPt0JP4rbMTT0JpoqP0+q6ee7dHFA1HoA8i5liLWXY7WGV21idKvUaLD2+09slBZnPFIyVZqtp/7rRRswhjaVF/LCC0QeIJbfaZNm1WQUh+xCyVA5KerFaFk/vuKbGgS3xqRC5WMduDPCHyo5AV8nOR4StBMG7vwEp9vJXp6C7YU0vbT8reuyTYORzVoLO+U2waooQKKrF5oGQodWOsL5NMqnJ3SCMVECXLCmPZ9hWt1woQJG+6N4KSCHHlcQ3QnaIxV6UYcFe55WiJlvi/rzgHbXSspFPayvjF4VPgfCOFxu49L/3T46YiP4/0/iX9/EtueQUuk3XEO0abFVjpIHvjwEOZ86cBh14y1yz6Zoa+Dv3H/2zdiTEW4td6DtehsNgkfapUNPXgpWN95xxFd+m3fLofnSAD7JwMvtRg6RqOdZlqSS4IFCNm/Efrb8OwL6J1wuxu0FnKcap40OAJ/i86h+c2jx1HxH/vSUPvBZnVU6V2Oo6ahM2+dLvrGN4n7BvZUPjf6IDiacJHQSEdopYXK6dgCHf2itVvvSu8aqjTH7N5+d7i4yF5dZC9f3Fshzru3ZrZov58BAMLX6dYPAAA=
     Metadata:
       aws:cdk:path: ImportServiceStack/CDKMetadata/Default
     Condition: CDKMetadataAvailable

@@ -1,30 +1,37 @@
-import axios, { AxiosError } from 'axios'
-import API_PATHS from '~/constants/apiPaths'
-import { AvailableProduct } from '~/models/Product'
-import { useMutation, useQuery, useQueryClient } from 'react-query'
-import React from 'react'
+import axios, { AxiosError } from 'axios';
+import API_PATHS from '~/constants/apiPaths';
+import { AvailableProduct } from '~/models/Product';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import React from 'react';
 
 export function useAvailableProducts() {
     return useQuery<AvailableProduct[], AxiosError>(
         'available-products',
         async () => {
             const res = await axios.get<AvailableProduct[]>(
-                `${API_PATHS.bff}/products`
+                `${API_PATHS.bff}/products`,
+                {
+                    headers: {
+                        Authorization: `Basic ${localStorage.getItem(
+                            'authorization_token'
+                        )}`,
+                    },
+                }
             );
             return res.data;
         }
-    )
+    );
 }
 
 export function useInvalidateAvailableProducts() {
-    const queryClient = useQueryClient()
+    const queryClient = useQueryClient();
     return React.useCallback(
         () =>
             queryClient.invalidateQueries('available-products', {
                 exact: true,
             }),
         []
-    )
+    );
 }
 
 export function useAvailableProduct(id?: string) {
@@ -32,21 +39,28 @@ export function useAvailableProduct(id?: string) {
         ['product', { id }],
         async () => {
             const res = await axios.get<AvailableProduct>(
-                `${API_PATHS.bff}/product/${id}`
-            )
-            return res.data
+                `${API_PATHS.bff}/product/${id}`,
+                {
+                    headers: {
+                        Authorization: `Basic ${localStorage.getItem(
+                            'authorization_token'
+                        )}`,
+                    },
+                }
+            );
+            return res.data;
         },
         { enabled: !!id }
-    )
+    );
 }
 
 export function useRemoveProductCache() {
-    const queryClient = useQueryClient()
+    const queryClient = useQueryClient();
     return React.useCallback(
         (id?: string) =>
             queryClient.removeQueries(['product', { id }], { exact: true }),
         []
-    )
+    );
 }
 
 export function useUpsertAvailableProduct() {
@@ -58,7 +72,7 @@ export function useUpsertAvailableProduct() {
                 )}`,
             },
         })
-    )
+    );
 }
 
 export function useDeleteAvailableProduct() {
@@ -70,5 +84,5 @@ export function useDeleteAvailableProduct() {
                 )}`,
             },
         })
-    )
+    );
 }

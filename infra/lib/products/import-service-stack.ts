@@ -9,10 +9,31 @@ import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { DbTablesStack } from '../db-tables-stack';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
+import { AuthorizationType } from 'aws-cdk-lib/aws-apigateway';
 
 export class ImportServiceStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, tables: DbTablesStack) {
+    private readonly authorizer: apigateway.TokenAuthorizer;
+
+    constructor(scope: Construct, id: string, { tables, authArn }: { tables: DbTablesStack, authArn: string }) {
         super(scope, id);
+
+        const authorizerFn = lambda.Function.fromFunctionAttributes(
+            this,
+            'BasicAuthorizerLambda',
+            {
+                functionArn: authArn,
+                sameEnvironment: true,
+            },
+        );
+
+        this.authorizer = new apigateway.TokenAuthorizer(
+            this,
+            'ImportBasicAuthorizer',
+            {
+                handler: authorizerFn,
+                identitySource: 'method.request.header.Authorization',
+            },
+        );
 
         const uploadBucket = new aws_s3.Bucket(this, 'ProductsImportBucket', {
             removalPolicy: RemovalPolicy.DESTROY,
@@ -76,8 +97,24 @@ export class ImportServiceStack extends cdk.Stack {
         });
         const importResource = api.root.addResource('import');
         const importProductsResource = importResource.addResource('products');
+        importProductsResource.addCorsPreflight({
+            allowOrigins: apigateway.Cors.ALL_ORIGINS,
+            allowMethods: apigateway.Cors.ALL_METHODS,
+            allowHeaders: ['*'],
+        });
         const importIntegration = new apigateway.LambdaIntegration(importProductsFile, {});
-        importProductsResource.addMethod('GET', importIntegration);
+        importProductsResource.addMethod('GET', importIntegration, {
+            authorizationType: AuthorizationType.CUSTOM,
+            authorizer: this.authorizer,
+            methodResponses: ['200', '404', '500'].map(status => ({
+                statusCode: status,
+                responseParameters: {
+                    'method.response.header.Access-Control-Allow-Origin': true,
+                    'method.response.header.Access-Control-Allow-Methods': true,
+                    'method.response.header.Access-Control-Allow-Headers': true,
+                },
+            })),
+        });
 
         const catalogBatchProcess = new lambda.Function(this, 'catalogBatchProcess', {
             runtime: lambda.Runtime.NODEJS_20_X,
