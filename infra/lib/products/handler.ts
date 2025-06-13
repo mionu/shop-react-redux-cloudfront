@@ -11,7 +11,12 @@ import { SQSClient, SendMessageBatchCommand } from '@aws-sdk/client-sqs';
 import {
     ProductsService,
 } from './products-service';
-import { S3Event, SQSEvent } from 'aws-lambda';
+import {
+    APIGatewayAuthorizerResult,
+    APIGatewayTokenAuthorizerEvent,
+    S3Event,
+    SQSEvent,
+} from 'aws-lambda';
 import { Readable } from 'node:stream';
 import * as csvParser from 'csv-parser';
 
@@ -236,5 +241,61 @@ export async function catalogBatchProcess(event: SQSEvent) {
         await snsClient.send(publishCommand);
     } catch (error) {
         console.error('Error in catalogBatchProcess: ', error);
+    }
+}
+
+export async function authorize(event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult> {
+    console.log('Event: ', JSON.stringify(event, null, 2));
+    try {
+        const token = event.authorizationToken;
+
+        if (!token || !token.startsWith('Basic ')) {
+            throw new Error('Unauthorized');
+        }
+
+        // Decode the Basic Authorization token
+        const base64Credentials = token.split(' ')[1];
+        const decodedCredentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+        const [username, password] = decodedCredentials.split(':');
+
+        if (!username || !password) {
+            throw new Error('Unauthorized');
+        }
+
+        // Validate credentials against environment variables
+        const expectedPassword = process.env[username];
+        if (expectedPassword !== password) {
+            throw new Error('Access Denied');
+        }
+
+        console.log('Access Granted: Valid credentials provided');
+        return {
+            principalId: 'user',
+            policyDocument: {
+                Version: '2012-10-17',
+                Statement: [
+                    {
+                        Action: 'execute-api:Invoke',
+                        Effect: 'Allow',
+                        Resource: event.methodArn,
+                    },
+                ],
+            },
+        };
+    } catch (error) {
+        console.log('Access Denied: ', error);
+        return {
+            principalId: 'user',
+            policyDocument: {
+                Version: '2012-10-17',
+                Statement: [
+                    {
+                        Action: 'execute-api:Invoke',
+                        Effect: 'Deny',
+                        Resource: event.methodArn,
+                    },
+                ],
+            },
+        };
     }
 }
